@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:streaklearn/core/di/app_providers.dart';
+import 'package:streaklearn/shared/widgets/state_demo_widget.dart';
 import 'core/theme/app_theme.dart';
 
 class StreakLearnApp extends StatelessWidget {
@@ -53,6 +54,7 @@ class HomeScreenPlaceholder extends StatelessWidget {
                 textAlign: TextAlign.center,
               ),
             ),
+            StateDemoWidget(),
           ],
         ),
       ),
