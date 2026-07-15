@@ -39,3 +39,20 @@ migrate.json
 
 # Flutter internal
 .metadata
+
+# Generated Dart files (must not be committed per hackathon rules)
+*.g.dart
+*.freezed.dart
+*.mocks.dart
+
+# AI assistant artifacts (must never be committed)
+.claude/
+CLAUDE.md
+CLAUDE.local.md
+.cursor/
+.cursorrules
+.aider*
+.github/copilot-instructions.md
+
+# OS files
+Thumbs.db
