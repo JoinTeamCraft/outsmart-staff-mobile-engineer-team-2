@@ -8,12 +8,6 @@ class StreakLearnApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Why AppProviders widget needed here?
-    // It wraps the app in all cubit providers (Lesson/Quiz/Streak) needed
-    // app-wide. Pulled out into AppProviders (core/di/app_providers.dart)
-    // instead of inlined here, so this file only describes the app shell
-    // (theme, routes) — new cubits get added there, not here, keeping
-    // this file stable as more tracks land.
     return AppProviders(
       child: MaterialApp(
         title: 'StreakLearn',
