@@ -29,7 +29,13 @@ class Question {
       id: json['id'] as String? ?? '',
       question: json['question'] as String? ?? '',
       options: rawOptions.map((o) => o.toString()).toList(growable: false),
-      correctIndex: json['correctIndex'] as int? ?? -1,
+      // Accept any numeric type: `num` covers both int and double, so a JSON
+      // value like `0.0` isn't dropped. Anything non-numeric (or missing)
+      // falls back to the invalid sentinel -1 without throwing.
+      correctIndex: switch (json['correctIndex']) {
+        final num value => value.toInt(),
+        _ => -1,
+      },
     );
   }
 

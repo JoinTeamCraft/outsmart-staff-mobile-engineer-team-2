@@ -11,13 +11,19 @@
 /// unexpected errors still bubble up during development. [cause] is positional
 /// so subclasses can forward it via super parameters.
 class ApiException implements Exception {
-  const ApiException(this.message, [this.cause]);
+  const ApiException(this.message, [this.cause, this.stackTrace]);
 
   /// Human-readable, non-localized description of what failed.
   final String message;
 
   /// The original error/exception that caused this failure, when wrapping one.
   final Object? cause;
+
+  /// The stack trace captured where [cause] was caught. Preserving it makes
+  /// missing/invalid-asset and parse failures far easier to diagnose than the
+  /// message alone. Both are positional so subclasses forward them via super
+  /// parameters.
+  final StackTrace? stackTrace;
 
   @override
   String toString() =>
@@ -28,8 +34,11 @@ class ApiException implements Exception {
 ///
 /// Maps to a "retry" error state in the UI (OU-7).
 class NetworkException extends ApiException {
-  const NetworkException(
-      [super.message = 'Network request failed', super.cause]);
+  const NetworkException([
+    super.message = 'Network request failed',
+    super.cause,
+    super.stackTrace,
+  ]);
 }
 
 /// Thrown when a response was received but could not be parsed into a model.
@@ -40,5 +49,6 @@ class DataParsingException extends ApiException {
   const DataParsingException([
     super.message = 'Failed to parse data',
     super.cause,
+    super.stackTrace,
   ]);
 }

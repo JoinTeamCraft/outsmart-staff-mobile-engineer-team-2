@@ -30,8 +30,8 @@ class LessonRepository {
       raw = await _apiClient.getLessonsRaw();
     } on ApiException {
       rethrow; // already typed by ApiClient
-    } catch (e) {
-      throw NetworkException('Failed to fetch lessons', e);
+    } catch (e, st) {
+      throw NetworkException('Failed to fetch lessons', e, st);
     }
 
     try {
@@ -40,8 +40,8 @@ class LessonRepository {
           .whereType<Map<String, dynamic>>()
           .map(Lesson.fromJson)
           .toList(growable: false);
-    } catch (e) {
-      throw DataParsingException('Failed to parse lessons response', e);
+    } catch (e, st) {
+      throw DataParsingException('Failed to parse lessons response', e, st);
     }
   }
 }

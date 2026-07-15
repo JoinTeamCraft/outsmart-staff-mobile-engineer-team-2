@@ -43,11 +43,11 @@ class ApiClient {
     }
     try {
       return await rootBundle.loadString(assetPath);
-    } catch (e) {
+    } catch (e, st) {
       // A genuinely missing/unreadable asset is also a network-style failure
       // from the caller's perspective — surface it as a typed exception so it
-      // never crashes the UI.
-      throw NetworkException('Failed to load asset $assetPath', e);
+      // never crashes the UI. Keep the stack trace to ease diagnosis.
+      throw NetworkException('Failed to load asset $assetPath', e, st);
     }
   }
 

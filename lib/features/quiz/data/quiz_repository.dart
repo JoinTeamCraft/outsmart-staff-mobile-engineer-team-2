@@ -30,22 +30,25 @@ class QuizRepository {
       raw = await _apiClient.getQuizzesRaw();
     } on ApiException {
       rethrow;
-    } catch (e) {
-      throw NetworkException('Failed to fetch quizzes', e);
+    } catch (e, st) {
+      throw NetworkException('Failed to fetch quizzes', e, st);
     }
 
     try {
       final decoded = jsonDecode(raw) as List<dynamic>;
       for (final item in decoded.whereType<Map<String, dynamic>>()) {
-        if (item['lessonId'] == lessonId) {
+        // Compare as strings so a numeric `lessonId` in the JSON source
+        // still matches, instead of silently missing.
+        if (item['lessonId']?.toString() == lessonId) {
           return Quiz.fromJson(item);
         }
       }
       return null; // no quiz for this lesson — not an error
-    } catch (e) {
+    } catch (e, st) {
       throw DataParsingException(
         'Failed to parse quiz for lesson $lessonId',
         e,
+        st,
       );
     }
   }
