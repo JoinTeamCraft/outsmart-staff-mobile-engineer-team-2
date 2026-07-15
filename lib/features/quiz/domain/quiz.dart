@@ -28,8 +28,10 @@ class Quiz {
     final rawQuestions =
         json['questions'] as List<dynamic>? ?? const <dynamic>[];
     return Quiz(
-      id: json['id'] as String?,
-      lessonId: json['lessonId'] as String? ?? '',
+      // `?.toString()` (not `as String?`) so numeric ids degrade gracefully
+      // instead of throwing; `id` stays nullable, `lessonId` defaults to ''.
+      id: json['id']?.toString(),
+      lessonId: json['lessonId']?.toString() ?? '',
       questions: rawQuestions
           .whereType<Map<String, dynamic>>()
           .map(Question.fromJson)

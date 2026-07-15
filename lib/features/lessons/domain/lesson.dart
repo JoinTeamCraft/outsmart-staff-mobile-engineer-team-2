@@ -29,12 +29,16 @@ class Lesson {
   /// Every field is read null-safely with a sensible default, keeping the
   /// model total and crash-free even if the source data is incomplete.
   factory Lesson.fromJson(Map<String, dynamic> json) {
+    // Coerce with `?.toString()` rather than `as String?`: a non-string value
+    // (e.g. a numeric id if the API ever changes) then degrades to its string
+    // form instead of throwing, honouring this model's crash-free contract.
+    // For genuine strings `toString()` returns the value unchanged.
     return Lesson(
-      id: json['id'] as String? ?? '',
-      title: json['title'] as String? ?? '',
-      topic: json['topic'] as String? ?? '',
-      thumbnail: json['thumbnail'] as String? ?? '',
-      content: json['content'] as String? ?? '',
+      id: json['id']?.toString() ?? '',
+      title: json['title']?.toString() ?? '',
+      topic: json['topic']?.toString() ?? '',
+      thumbnail: json['thumbnail']?.toString() ?? '',
+      content: json['content']?.toString() ?? '',
     );
   }
 

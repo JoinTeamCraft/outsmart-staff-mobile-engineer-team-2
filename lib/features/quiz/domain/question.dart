@@ -26,8 +26,10 @@ class Question {
   factory Question.fromJson(Map<String, dynamic> json) {
     final rawOptions = json['options'] as List<dynamic>? ?? const <dynamic>[];
     return Question(
-      id: json['id'] as String? ?? '',
-      question: json['question'] as String? ?? '',
+      // `?.toString()` (not `as String?`) so a numeric id/question degrades
+      // gracefully instead of throwing; unchanged for genuine strings.
+      id: json['id']?.toString() ?? '',
+      question: json['question']?.toString() ?? '',
       options: rawOptions.map((o) => o.toString()).toList(growable: false),
       // Accept any numeric type: `num` covers both int and double, so a JSON
       // value like `0.0` isn't dropped. Anything non-numeric (or missing)
