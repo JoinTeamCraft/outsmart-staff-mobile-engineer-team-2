@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:streaklearn/core/di/app_providers.dart';
 import 'core/theme/app_theme.dart';
 
 class StreakLearnApp extends StatelessWidget {
@@ -6,15 +7,23 @@ class StreakLearnApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'StreakLearn',
-      theme: AppTheme.lightTheme,
-      darkTheme: AppTheme.darkTheme,
-      themeMode: ThemeMode.system,
-      initialRoute: '/',
-      routes: {
-        '/': (context) => const HomeScreenPlaceholder(),
-      },
+    // Why AppProviders widget needed here?
+    // It wraps the app in all cubit providers (Lesson/Quiz/Streak) needed
+    // app-wide. Pulled out into AppProviders (core/di/app_providers.dart)
+    // instead of inlined here, so this file only describes the app shell
+    // (theme, routes) — new cubits get added there, not here, keeping
+    // this file stable as more tracks land.
+    return AppProviders(
+      child: MaterialApp(
+        title: 'StreakLearn',
+        theme: AppTheme.lightTheme,
+        darkTheme: AppTheme.darkTheme,
+        themeMode: ThemeMode.system,
+        initialRoute: '/',
+        routes: {
+          '/': (context) => const HomeScreenPlaceholder(),
+        },
+      ),
     );
   }
 }
