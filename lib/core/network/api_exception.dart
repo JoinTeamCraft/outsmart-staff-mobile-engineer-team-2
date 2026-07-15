@@ -1,10 +1,9 @@
-/// Typed failures surfaced by the data layer (network client + repositories).
-///
-/// Catching the single base type [ApiException] lets downstream consumers —
-/// the state layer (OU-2) and the Lesson Feed error UX (OU-7) — handle every
-/// data-layer failure uniformly, without depending on `dart:io` (which is
-/// unavailable on web, our primary target).
-library;
+// Typed failures surfaced by the data layer (network client + repositories).
+//
+// Catching the single base type [ApiException] lets downstream consumers — the
+// state layer (OU-2) and the Lesson Feed error UX (OU-7) — handle every
+// data-layer failure uniformly, without depending on `dart:io` (which is
+// unavailable on web, our primary target).
 
 /// Base class for all data-layer failures.
 ///
