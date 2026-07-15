@@ -31,6 +31,12 @@ class MemoryCache<K, V> {
   final Map<K, _CacheEntry<V>> _entries = {};
   final Map<K, Future<V>> _inFlight = {};
 
+  /// Monotonic per-key generation. Bumped whenever a new fetch starts, or on
+  /// [invalidate]/[clear]. A completing fetch only commits its result if the
+  /// key's generation still matches the one captured when it started — so a
+  /// superseded (e.g. slower) fetch can never overwrite fresher data.
+  final Map<K, int> _generation = {};
+
   /// Returns the cached value for [key] if present and fresh; otherwise loads
   /// it via [fetch], stores the result, and returns it.
   ///
@@ -38,6 +44,10 @@ class MemoryCache<K, V> {
   ///   result still updates the cache).
   /// - Concurrent calls for the same [key] share a single in-flight [fetch].
   /// - A failing [fetch] is never cached; the error propagates to the caller.
+  /// - If a newer fetch or an [invalidate]/[clear] supersedes this one while it
+  ///   is in flight, this fetch's result is returned to its own callers but is
+  ///   NOT written to the cache (prevents a stale-write race under
+  ///   forceRefresh / pull-to-refresh).
   Future<V> getOrFetch(
     K key,
     Future<V> Function() fetch, {
@@ -52,9 +62,16 @@ class MemoryCache<K, V> {
       if (pending != null) return pending;
     }
 
+    // Tag this fetch with the key's next generation; a later fetch or
+    // invalidate() will bump it and invalidate this fetch's commit.
+    final generation = (_generation[key] ?? 0) + 1;
+    _generation[key] = generation;
+
     late final Future<V> future;
     future = fetch().then((value) {
-      _entries[key] = _CacheEntry(value, _clock());
+      if (_generation[key] == generation) {
+        _entries[key] = _CacheEntry(value, _clock());
+      }
       return value;
     }).whenComplete(() {
       // Only clear if this is still the current in-flight fetch — a later
@@ -67,22 +84,28 @@ class MemoryCache<K, V> {
     return future;
   }
 
-  /// Removes any cached (and in-flight) value for [key].
+  /// Removes any cached (and in-flight) value for [key], and supersedes any
+  /// in-flight fetch so its result will not be written after this call.
   void invalidate(K key) {
     _entries.remove(key);
     _inFlight.remove(key);
+    _generation[key] = (_generation[key] ?? 0) + 1;
   }
 
-  /// Clears the entire cache.
+  /// Clears the entire cache and supersedes all in-flight fetches.
   void clear() {
     _entries.clear();
     _inFlight.clear();
+    for (final key in _generation.keys.toList()) {
+      _generation[key] = _generation[key]! + 1;
+    }
   }
 
   bool _isExpired(_CacheEntry<V> entry) {
     final ttl = this.ttl;
     if (ttl == null) return false;
-    return _clock().difference(entry.storedAt) > ttl;
+    // Expired once the full TTL has elapsed (>=), the conventional boundary.
+    return _clock().difference(entry.storedAt) >= ttl;
   }
 }
 
