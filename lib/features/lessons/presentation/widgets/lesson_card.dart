@@ -23,12 +23,16 @@ class LessonCard extends StatelessWidget {
           padding: const EdgeInsets.all(12),
           child: Row(
             children: [
-              ClipRRect(
-                borderRadius: BorderRadius.circular(8),
-                child: SizedBox(
-                  width: 64,
-                  height: 64,
-                  child: _LessonThumbnail(url: lesson.thumbnail),
+              Semantics(
+                label: 'Thumbnail for ${lesson.title}',
+                image: true,
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(8),
+                  child: SizedBox(
+                    width: 64,
+                    height: 64,
+                    child: _LessonThumbnail(url: lesson.thumbnail),
+                  ),
                 ),
               ),
               const SizedBox(width: 12),
@@ -71,37 +75,45 @@ class _LessonThumbnail extends StatelessWidget {
     // CachedNetworkImage — an empty string is still a value it will try
     // to request, which wastes a network round-trip (or throws inside the
     // package) and adds log noise, for a case we already know will fail.
-    if (url.trim().isEmpty) return _placeholder;
+    if (url.trim().isEmpty) {
+      return const ExcludeSemantics(child: _placeholder);
+    }
 
-    return CachedNetworkImage(
-      imageUrl: url,
-      fit: BoxFit.cover,
-      // Decode at ~2x display size (retina headroom), not the source
-      // image's native resolution — this is what actually avoids jank on
-      // a low-RAM device: a 3000px source photo decoded into a 64x64 slot
-      // without this would allocate a full-res bitmap in memory for no
-      // visual benefit, then downscale it every paint.
-      memCacheWidth: 128,
-      memCacheHeight: 128,
-      // Caps what's written to the on-disk cache too, so a large source
-      // image doesn't bloat local storage on a low-storage device even
-      // though it's never displayed at that resolution.
-      maxWidthDiskCache: 256,
-      maxHeightDiskCache: 256,
-      // Short fade avoids a jarring pop-in without adding a long-running
-      // opacity animation on lower-end GPUs.
-      fadeInDuration: const Duration(milliseconds: 150),
-      placeholder: (context, url) => const ColoredBox(
-        color: Color(0xFFEDEDED),
-        child: Center(
-          child: SizedBox(
-            width: 20,
-            height: 20,
-            child: CircularProgressIndicator(strokeWidth: 2),
+    return ExcludeSemantics(
+      // The outer Semantics(image: true, label: ...) in LessonCard already
+      // fully describes this thumbnail — exclude the loading spinner/broken
+      // -image icon's own default semantics so a screen reader doesn't
+      // announce both.
+      child: CachedNetworkImage(
+        imageUrl: url,
+        fit: BoxFit.cover,
+        // Decode at ~2x display size (retina headroom), not the source
+        // image's native resolution — this is what actually avoids jank on
+        // a low-RAM device: a 3000px source photo decoded into a 64x64 slot
+        // without this would allocate a full-res bitmap in memory for no
+        // visual benefit, then downscale it every paint.
+        memCacheWidth: 128,
+        memCacheHeight: 128,
+        // Caps what's written to the on-disk cache too, so a large source
+        // image doesn't bloat local storage on a low-storage device even
+        // though it's never displayed at that resolution.
+        maxWidthDiskCache: 256,
+        maxHeightDiskCache: 256,
+        // Short fade avoids a jarring pop-in without adding a long-running
+        // opacity animation on lower-end GPUs.
+        fadeInDuration: const Duration(milliseconds: 150),
+        placeholder: (context, url) => const ColoredBox(
+          color: Color(0xFFEDEDED),
+          child: Center(
+            child: SizedBox(
+              width: 20,
+              height: 20,
+              child: CircularProgressIndicator(strokeWidth: 2),
+            ),
           ),
         ),
+        errorWidget: (context, url, error) => _placeholder,
       ),
-      errorWidget: (context, url, error) => _placeholder,
     );
   }
 }
