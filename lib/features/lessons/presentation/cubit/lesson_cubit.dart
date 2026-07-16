@@ -18,19 +18,32 @@ class LessonCubit extends Cubit<LessonState> {
   /// cached result.
   Future<void> loadLessons({bool forceRefresh = false}) async {
     if (state.status == LessonStatus.loading) return;
-    emit(state.copyWith(status: LessonStatus.loading));
+
+    emit(
+      state.copyWith(
+        status: LessonStatus.loading,
+        errorMessage: null,
+      ),
+    );
+
     try {
       final lessons = await repository.getLessons(forceRefresh: forceRefresh);
-      emit(state.copyWith(
-        status: LessonStatus.success,
-        lessons: lessons,
-        hasReachedMax: true, // no pagination yet — OU-10 will manage this
-      ));
+
+      emit(
+        state.copyWith(
+          status: LessonStatus.success,
+          lessons: lessons,
+          hasReachedMax: true,
+          errorMessage: null,
+        ),
+      );
     } on ApiException catch (e) {
-      emit(state.copyWith(
-        status: LessonStatus.failure,
-        errorMessage: e.message,
-      ));
+      emit(
+        state.copyWith(
+          status: LessonStatus.failure,
+          errorMessage: e.message,
+        ),
+      );
     }
   }
 }
