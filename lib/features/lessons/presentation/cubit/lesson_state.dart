@@ -1,13 +1,23 @@
 import 'package:equatable/equatable.dart';
 import '../../domain/lesson.dart';
 
+/// Sentinel used by copyWith to distinguish "not provided" from
+/// "explicitly clear this nullable field".
+const _unset = Object();
+
 /// Mutually exclusive lifecycle states for the lesson list.
 ///
 /// An enum rather than separate booleans (`isLoading`, `hasError`, ...) so
 /// illegal combinations (e.g. loading + error at once) can't be represented.
 /// `loadingMore` is reserved for OU-10's pagination — unused by OU-2, but
 /// defined here so the state shape doesn't need to change when OU-10 lands.
-enum LessonStatus { initial, loading, loadingMore, success, failure }
+enum LessonStatus {
+  initial,
+  loading,
+  loadingMore,
+  success,
+  failure
+}
 
 /// Immutable state for [LessonCubit]. Compared by value via [Equatable] so
 /// `BlocBuilder` only rebuilds when a field actually changes.
@@ -44,13 +54,15 @@ class LessonState extends Equatable {
     LessonStatus? status,
     List<Lesson>? lessons,
     bool? hasReachedMax,
-    String? errorMessage,
+    Object? errorMessage = _unset,
   }) {
     return LessonState(
       status: status ?? this.status,
       lessons: lessons ?? this.lessons,
       hasReachedMax: hasReachedMax ?? this.hasReachedMax,
-      errorMessage: errorMessage,
+      errorMessage: identical(errorMessage, _unset)
+          ? this.errorMessage
+          : errorMessage as String?,
     );
   }
 
