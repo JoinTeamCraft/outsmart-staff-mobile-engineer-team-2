@@ -24,6 +24,11 @@ class LessonCubit extends Cubit<LessonState> {
   /// Distinct topics, cached; recomputed only when [_allLessons] changes.
   List<String> _topics = const [];
 
+  /// Lowercased lesson titles, index-aligned with [_allLessons]. Precomputed
+  /// once when [_allLessons] changes so search filtering does no per-pass
+  /// `toLowerCase()` allocation.
+  List<String> _titlesLower = const [];
+
   /// Lessons matching the active search/topic, cached; recomputed only when the
   /// query, topic, or [_allLessons] changes — never on every read or rebuild.
   List<Lesson> _filtered = const [];
@@ -51,7 +56,7 @@ class LessonCubit extends Cubit<LessonState> {
         ..clear()
         ..addAll(lessons);
 
-      _recomputeTopics();
+      _recomputeDerived();
       _filtered = _computeFiltered(state.searchQuery, state.selectedTopic);
       final firstPage = _filtered.take(pageSize).toList();
 
@@ -134,21 +139,30 @@ class LessonCubit extends Cubit<LessonState> {
   /// Distinct topics for the filter chips (OU-9) — a cached O(1) read.
   List<String> get topics => _topics;
 
-  void _recomputeTopics() {
+  /// Recomputes cached data derived from [_allLessons] — distinct topics and
+  /// the index-aligned lowercased titles. Called only when [_allLessons]
+  /// changes, keeping both caches in lockstep with it.
+  void _recomputeDerived() {
     _topics = _allLessons.map((l) => l.topic).toSet().toList()..sort();
+    _titlesLower =
+        _allLessons.map((l) => l.title.toLowerCase()).toList(growable: false);
   }
 
   /// Filters [_allLessons] by [query] (case-insensitive title match) and
   /// [topic]. Only invoked when inputs change (load or filter), so it never
-  /// runs on a rebuild/read.
+  /// runs on a rebuild/read. Uses the precomputed [_titlesLower] cache, so a
+  /// filter pass allocates no per-lesson lowercase strings.
   List<Lesson> _computeFiltered(String query, String? topic) {
     final normalized = query.trim().toLowerCase();
-    return _allLessons.where((lesson) {
+    final result = <Lesson>[];
+    for (var i = 0; i < _allLessons.length; i++) {
+      final lesson = _allLessons[i];
       final matchesQuery =
-          normalized.isEmpty || lesson.title.toLowerCase().contains(normalized);
+          normalized.isEmpty || _titlesLower[i].contains(normalized);
       final matchesTopic = topic == null || lesson.topic == topic;
-      return matchesQuery && matchesTopic;
-    }).toList(growable: false);
+      if (matchesQuery && matchesTopic) result.add(lesson);
+    }
+    return result;
   }
 
   /// Applies a new search [query] and resets to the first page of results.
