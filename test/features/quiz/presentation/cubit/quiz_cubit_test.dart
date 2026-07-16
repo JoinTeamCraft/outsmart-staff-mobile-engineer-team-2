@@ -165,4 +165,37 @@ void main() {
       ],
     );
   });
+  blocTest<QuizCubit, QuizState>(
+    'clears previous quiz data when loading another quiz',
+    build: () {
+      when(
+            () => repository.getQuizByLessonId(
+          any(),
+          forceRefresh: any(named: 'forceRefresh'),
+        ),
+      ).thenAnswer(
+            (_) async => testQuiz,
+      );
+
+      return QuizCubit(repository);
+    },
+    seed: () => const QuizState(
+      status: QuizStatus.inProgress,
+      quiz: testQuiz,
+      currentQuestionIndex: 1,
+      correctAnswers: 1,
+    ),
+    act: (cubit) => cubit.loadQuiz('lesson-2'),
+    expect: () => [
+      const QuizState(
+        status: QuizStatus.loading,
+      ),
+      const QuizState(
+        status: QuizStatus.inProgress,
+        quiz: testQuiz,
+        currentQuestionIndex: 0,
+        correctAnswers: 0,
+      ),
+    ],
+  );
 }
