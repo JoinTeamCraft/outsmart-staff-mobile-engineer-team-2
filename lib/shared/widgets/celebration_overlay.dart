@@ -114,8 +114,14 @@ class _CelebrationOverlayState extends State<CelebrationOverlay>
   Future<void> _debugCompleteQuiz(BuildContext context) async {
     final quizCubit = context.read<QuizCubit>();
     await quizCubit.loadQuiz('lesson-1');
-    while (quizCubit.state.status == QuizStatus.inProgress) {
+    // Answer a bounded number of questions (the quiz's own count) and yield
+    // between each, so this can never spin the UI thread even if answering
+    // ever becomes asynchronous.
+    final questionCount = quizCubit.state.quiz?.questionCount ?? 0;
+    for (var i = 0; i < questionCount; i++) {
+      if (quizCubit.state.status != QuizStatus.inProgress) break;
       quizCubit.answerQuestion(0);
+      await Future<void>.delayed(Duration.zero);
     }
   }
 }

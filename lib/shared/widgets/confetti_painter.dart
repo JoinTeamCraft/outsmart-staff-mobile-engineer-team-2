@@ -53,6 +53,10 @@ class ConfettiPainter extends CustomPainter {
   /// Downward acceleration, in fractions of screen height per unit of progress².
   static const double _gravity = 1.6;
 
+  /// Shared across frames — a [Paint] is safe to reuse, and only its color
+  /// changes per particle, so this avoids a per-frame allocation.
+  static final Paint _paint = Paint()..style = PaintingStyle.fill;
+
   @override
   void paint(Canvas canvas, Size size) {
     final t = progress;
@@ -60,7 +64,6 @@ class ConfettiPainter extends CustomPainter {
     final opacity = t < 0.65 ? 1.0 : (1.0 - (t - 0.65) / 0.35).clamp(0.0, 1.0);
     if (opacity <= 0) return;
 
-    final paint = Paint()..style = PaintingStyle.fill;
     for (final p in particles) {
       final dx = (p.origin.dx + cos(p.angle) * p.speed * t) * size.width;
       final dy =
@@ -68,7 +71,7 @@ class ConfettiPainter extends CustomPainter {
               size.height;
       if (dy > size.height + 40) continue; // already off-screen
 
-      paint.color = p.color.withValues(alpha: opacity);
+      _paint.color = p.color.withValues(alpha: opacity);
       canvas
         ..save()
         ..translate(dx, dy)
@@ -80,10 +83,10 @@ class ConfettiPainter extends CustomPainter {
             width: p.size,
             height: p.size * 0.5,
           ),
-          paint,
+          _paint,
         );
       } else {
-        canvas.drawCircle(Offset.zero, p.size * 0.4, paint);
+        canvas.drawCircle(Offset.zero, p.size * 0.4, _paint);
       }
       canvas.restore();
     }
