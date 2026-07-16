@@ -33,6 +33,8 @@ class _LessonFeedScreenState extends State<LessonFeedScreen> {
   }
 
   void _onScroll() {
+    if (!_scrollController.hasClients) return;
+
     final position = _scrollController.position;
 
     if (position.extentAfter < _loadMoreThreshold) {
