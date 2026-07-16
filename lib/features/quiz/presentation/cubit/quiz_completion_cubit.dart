@@ -21,6 +21,14 @@ import 'quiz_state.dart';
 /// It deliberately does NOT mutate the streak. Reacting to completion (streak
 /// increment + firing animations) is owned by OU-18; OU-13 only defines and
 /// emits the event. See the OU-13/OU-18 boundary agreed in team chat.
+///
+/// Emission caveat: [Cubit] suppresses an emit equal to the current state, and
+/// [QuizResult] is [Equatable]. Two back-to-back completions with an identical
+/// score are therefore distinguished only by [QuizResult.completedAt]. In
+/// production `DateTime.now()` always returns a distinct timestamp, so every
+/// completion emits. Tests using a fixed mock clock (OU-23) must advance it
+/// between completions, or the second (identical) result is deduped and no
+/// event fires.
 class QuizCompletionCubit extends Cubit<QuizResult?> {
   QuizCompletionCubit(this._quizCubit, {DateTime Function()? clock})
       : _now = clock ?? DateTime.now,
