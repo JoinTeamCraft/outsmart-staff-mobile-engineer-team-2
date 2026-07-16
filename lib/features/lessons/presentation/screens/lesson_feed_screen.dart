@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../../quiz/presentation/screens/quiz_screen.dart';
 import '../cubit/lesson_cubit.dart';
 import '../cubit/lesson_state.dart';
 import '../widgets/lesson_card.dart';
@@ -125,7 +126,16 @@ class _LessonFeedScreenState extends State<LessonFeedScreen> {
                   key: ValueKey(lesson.id),
                   lesson: lesson,
                   onTap: () {
-                    // Navigate to lesson details (OU-11).
+                    // TEMPORARY (OU-12): until OU-11's lesson-detail screen and
+                    // its "Start Quiz" CTA exist, tapping a lesson opens its
+                    // quiz directly so the quiz flow is reachable and testable.
+                    // OU-11 will replace this with navigation to the detail
+                    // screen, whose CTA then pushes QuizScreen.
+                    Navigator.of(context).push(
+                      MaterialPageRoute<void>(
+                        builder: (_) => QuizScreen(lessonId: lesson.id),
+                      ),
+                    );
                   },
                 );
               },
