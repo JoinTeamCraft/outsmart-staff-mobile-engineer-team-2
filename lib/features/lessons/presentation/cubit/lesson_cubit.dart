@@ -44,13 +44,14 @@ class LessonCubit extends Cubit<LessonState> {
         ..clear()
         ..addAll(lessons);
 
-      final firstPage = _allLessons.take(pageSize).toList();
+      final filtered = _filteredLessons;
+      final firstPage = filtered.take(pageSize).toList();
 
       emit(
         state.copyWith(
           status: LessonStatus.success,
           lessons: firstPage,
-          hasReachedMax: firstPage.length >= _allLessons.length,
+          hasReachedMax: firstPage.length >= filtered.length,
           errorMessage: null,
         ),
       );
@@ -88,8 +89,9 @@ class LessonCubit extends Cubit<LessonState> {
     );
 
     try {
+      final filtered = _filteredLessons;
       final nextPage =
-          _allLessons.skip(state.lessons.length).take(pageSize).toList();
+          filtered.skip(state.lessons.length).take(pageSize).toList();
 
       final updatedLessons = [
         ...state.lessons,
@@ -100,7 +102,7 @@ class LessonCubit extends Cubit<LessonState> {
         state.copyWith(
           status: LessonStatus.success,
           lessons: updatedLessons,
-          hasReachedMax: updatedLessons.length >= _allLessons.length,
+          hasReachedMax: updatedLessons.length >= filtered.length,
           errorMessage: null,
         ),
       );
@@ -120,5 +122,46 @@ class LessonCubit extends Cubit<LessonState> {
         ),
       );
     }
+  }
+
+  /// Distinct topics across all loaded lessons, for the filter chips (OU-9).
+  List<String> get topics =>
+      _allLessons.map((l) => l.topic).toSet().toList()..sort();
+
+  /// Lessons matching the current search query and selected topic (OU-9).
+  List<Lesson> get _filteredLessons =>
+      _applyFilters(_allLessons, state.searchQuery, state.selectedTopic);
+
+  List<Lesson> _applyFilters(List<Lesson> source, String query, String? topic) {
+    final normalized = query.trim().toLowerCase();
+    return source.where((lesson) {
+      final matchesQuery =
+          normalized.isEmpty || lesson.title.toLowerCase().contains(normalized);
+      final matchesTopic = topic == null || lesson.topic == topic;
+      return matchesQuery && matchesTopic;
+    }).toList();
+  }
+
+  /// Applies a new search [query] and resets to the first page of results.
+  void search(String query) =>
+      _emitFiltered(query: query, topic: state.selectedTopic);
+
+  /// Applies a topic filter ([topic] `null` = all) and resets to first page.
+  void selectTopic(String? topic) =>
+      _emitFiltered(query: state.searchQuery, topic: topic);
+
+  void _emitFiltered({required String query, required String? topic}) {
+    final filtered = _applyFilters(_allLessons, query, topic);
+    final firstPage = filtered.take(pageSize).toList();
+    emit(
+      state.copyWith(
+        status: LessonStatus.success,
+        searchQuery: query,
+        selectedTopic: topic,
+        lessons: firstPage,
+        hasReachedMax: firstPage.length >= filtered.length,
+        errorMessage: null,
+      ),
+    );
   }
 }
