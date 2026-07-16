@@ -9,7 +9,14 @@ class QuizCubit extends Cubit<QuizState> {
   QuizCubit(this.repository) : super(const QuizState());
 
   Future<void> loadQuiz(String lessonId, {bool forceRefresh = false}) async {
-    emit(state.copyWith(status: QuizStatus.loading));
+    if (state.status == QuizStatus.loading) return;
+
+    emit(
+      state.copyWith(
+        status: QuizStatus.loading,
+        errorMessage: null,
+      ),
+    );
 
     try {
       final quiz = await repository.getQuizByLessonId(
@@ -17,8 +24,8 @@ class QuizCubit extends Cubit<QuizState> {
         forceRefresh: forceRefresh,
       );
 
-      // `null` or an empty quiz means this lesson has no quiz available.
-      // This is an expected business state, not an error.
+      // A missing or empty quiz means this lesson does not have quiz content.
+      // This is an expected business state, not an error condition.
       if (quiz == null || quiz.isEmpty) {
         emit(
           state.copyWith(
