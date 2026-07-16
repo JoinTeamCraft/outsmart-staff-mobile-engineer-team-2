@@ -16,7 +16,6 @@ class LessonFeedScreen extends StatefulWidget {
 
 class _LessonFeedScreenState extends State<LessonFeedScreen> {
   final ScrollController _scrollController = ScrollController();
-  static const double _loadMoreThreshold = 200;
 
 
   @override
@@ -37,7 +36,7 @@ class _LessonFeedScreenState extends State<LessonFeedScreen> {
 
     final position = _scrollController.position;
 
-    if (position.extentAfter < _loadMoreThreshold) {
+    if (position.extentAfter < 200) {
       context.read<LessonCubit>().loadMoreLessons();
     }
   }
