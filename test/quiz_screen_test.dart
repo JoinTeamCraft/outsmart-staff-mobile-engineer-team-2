@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:streaklearn/core/network/api_exception.dart';
 import 'package:streaklearn/features/quiz/data/quiz_repository.dart';
 import 'package:streaklearn/features/quiz/domain/question.dart';
 import 'package:streaklearn/features/quiz/domain/quiz.dart';
@@ -20,6 +21,16 @@ class _FakeQuizRepo extends Fake implements QuizRepository {
     bool forceRefresh = false,
   }) async =>
       _quiz;
+}
+
+// Always fails, to exercise the failure UI + retry path.
+class _ThrowingQuizRepo extends Fake implements QuizRepository {
+  @override
+  Future<Quiz?> getQuizByLessonId(
+    String lessonId, {
+    bool forceRefresh = false,
+  }) async =>
+      throw const NetworkException('boom');
 }
 
 Quiz _quizWith2() => const Quiz(
@@ -94,5 +105,14 @@ void main() {
     await tester.pumpWidget(_wrap(cubit));
     await tester.pumpAndSettle();
     expect(find.text('This lesson has no quiz yet.'), findsOneWidget);
+  });
+
+  testWidgets('load failure shows the error message and a retry action',
+      (tester) async {
+    final cubit = QuizCubit(_ThrowingQuizRepo());
+    await tester.pumpWidget(_wrap(cubit));
+    await tester.pumpAndSettle();
+    expect(find.text('boom'), findsOneWidget);
+    expect(find.text('Retry'), findsOneWidget);
   });
 }

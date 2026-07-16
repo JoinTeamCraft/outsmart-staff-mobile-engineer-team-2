@@ -129,8 +129,8 @@ class _LessonFeedScreenState extends State<LessonFeedScreen> {
                     // TEMPORARY (OU-12): until OU-11's lesson-detail screen and
                     // its "Start Quiz" CTA exist, tapping a lesson opens its
                     // quiz directly so the quiz flow is reachable and testable.
-                    // OU-11 will replace this with navigation to the detail
-                    // screen, whose CTA then pushes QuizScreen.
+                    // TODO(OU-11): replace with navigation to the lesson-detail
+                    // screen, whose Start Quiz CTA then pushes QuizScreen.
                     Navigator.of(context).push(
                       MaterialPageRoute<void>(
                         builder: (_) => QuizScreen(lessonId: lesson.id),

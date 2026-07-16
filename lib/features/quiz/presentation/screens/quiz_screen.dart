@@ -128,6 +128,11 @@ class _QuizQuestionView extends StatelessWidget {
     assert(quiz != null, 'QuizStatus.inProgress must carry a non-null quiz');
     if (quiz == null) return const SizedBox.shrink();
     final index = state.currentQuestionIndex;
+    // Defensive: a consistent QuizCubit never emits an out-of-range index, but
+    // bail out gracefully rather than throw a RangeError if it ever does.
+    if (index < 0 || index >= quiz.questions.length) {
+      return const SizedBox.shrink();
+    }
     final question = quiz.questions[index];
     final total = quiz.questionCount;
     final answered = selectedIndex != null;

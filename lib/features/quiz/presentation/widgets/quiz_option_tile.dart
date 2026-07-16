@@ -86,6 +86,9 @@ class QuizOptionTile extends StatelessWidget {
           clipBehavior: Clip.antiAlias,
           child: InkWell(
             onTap: enabled ? onTap : null,
+            // Explicit radius (matching the Material clip) keeps the ink shape
+            // correct even if the surrounding clip ever changes.
+            borderRadius: BorderRadius.circular(12),
             child: AnimatedContainer(
               duration: const Duration(milliseconds: 200),
               curve: Curves.easeOut,
