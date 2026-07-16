@@ -1,6 +1,8 @@
 import 'package:equatable/equatable.dart';
 import '../../domain/quiz.dart';
 
+const _unset = Object();
+
 /// Mutually exclusive lifecycle states for loading and completing a quiz.
 ///
 /// [empty] indicates the requested lesson has no quiz available.
@@ -10,6 +12,7 @@ enum QuizStatus { initial, loading, empty, inProgress, complete, failure }
 
 /// Immutable state for [QuizCubit]. Compared by value via [Equatable] so
 /// `BlocBuilder` only rebuilds when a field actually changes.
+
 class QuizState extends Equatable {
   /// Current lifecycle phase — see [QuizStatus].
   final QuizStatus status;
@@ -49,19 +52,20 @@ class QuizState extends Equatable {
   /// loading failure, such as a network or parsing error.
   bool get hasFailure => status == QuizStatus.failure;
 
-  /// Returns a copy with only the given fields replaced — every other field
+  /// Nullable fields use an explicit sentinel internally so passing null
+  /// clears the existing value instead of preserving it. Every other field
   /// is carried over unchanged. Always emit through this rather than
   /// constructing `QuizState(...)` directly.
   QuizState copyWith({
     QuizStatus? status,
-    Quiz? quiz,
+    Object? quiz = _unset,
     int? currentQuestionIndex,
     int? correctAnswers,
     String? errorMessage,
   }) {
     return QuizState(
       status: status ?? this.status,
-      quiz: quiz ?? this.quiz,
+      quiz: identical(quiz, _unset) ? this.quiz : quiz as Quiz?,
       currentQuestionIndex: currentQuestionIndex ?? this.currentQuestionIndex,
       correctAnswers: correctAnswers ?? this.correctAnswers,
       errorMessage: errorMessage,
