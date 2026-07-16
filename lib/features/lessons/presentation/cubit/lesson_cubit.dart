@@ -21,6 +21,13 @@ class LessonCubit extends Cubit<LessonState> {
   /// Complete dataset used for client-side pagination.
   final List<Lesson> _allLessons = [];
 
+  /// Distinct topics, cached; recomputed only when [_allLessons] changes.
+  List<String> _topics = const [];
+
+  /// Lessons matching the active search/topic, cached; recomputed only when the
+  /// query, topic, or [_allLessons] changes — never on every read or rebuild.
+  List<Lesson> _filtered = const [];
+
   /// Loads the first page of lessons.
   ///
   /// [forceRefresh] bypasses repository cache when refreshing.
@@ -44,14 +51,15 @@ class LessonCubit extends Cubit<LessonState> {
         ..clear()
         ..addAll(lessons);
 
-      final filtered = _filteredLessons;
-      final firstPage = filtered.take(pageSize).toList();
+      _recomputeTopics();
+      _filtered = _computeFiltered(state.searchQuery, state.selectedTopic);
+      final firstPage = _filtered.take(pageSize).toList();
 
       emit(
         state.copyWith(
           status: LessonStatus.success,
           lessons: firstPage,
-          hasReachedMax: firstPage.length >= filtered.length,
+          hasReachedMax: firstPage.length >= _filtered.length,
           errorMessage: null,
         ),
       );
@@ -89,9 +97,8 @@ class LessonCubit extends Cubit<LessonState> {
     );
 
     try {
-      final filtered = _filteredLessons;
       final nextPage =
-          filtered.skip(state.lessons.length).take(pageSize).toList();
+          _filtered.skip(state.lessons.length).take(pageSize).toList();
 
       final updatedLessons = [
         ...state.lessons,
@@ -102,7 +109,7 @@ class LessonCubit extends Cubit<LessonState> {
         state.copyWith(
           status: LessonStatus.success,
           lessons: updatedLessons,
-          hasReachedMax: updatedLessons.length >= filtered.length,
+          hasReachedMax: updatedLessons.length >= _filtered.length,
           errorMessage: null,
         ),
       );
@@ -124,22 +131,24 @@ class LessonCubit extends Cubit<LessonState> {
     }
   }
 
-  /// Distinct topics across all loaded lessons, for the filter chips (OU-9).
-  List<String> get topics =>
-      _allLessons.map((l) => l.topic).toSet().toList()..sort();
+  /// Distinct topics for the filter chips (OU-9) — a cached O(1) read.
+  List<String> get topics => _topics;
 
-  /// Lessons matching the current search query and selected topic (OU-9).
-  List<Lesson> get _filteredLessons =>
-      _applyFilters(_allLessons, state.searchQuery, state.selectedTopic);
+  void _recomputeTopics() {
+    _topics = _allLessons.map((l) => l.topic).toSet().toList()..sort();
+  }
 
-  List<Lesson> _applyFilters(List<Lesson> source, String query, String? topic) {
+  /// Filters [_allLessons] by [query] (case-insensitive title match) and
+  /// [topic]. Only invoked when inputs change (load or filter), so it never
+  /// runs on a rebuild/read.
+  List<Lesson> _computeFiltered(String query, String? topic) {
     final normalized = query.trim().toLowerCase();
-    return source.where((lesson) {
+    return _allLessons.where((lesson) {
       final matchesQuery =
           normalized.isEmpty || lesson.title.toLowerCase().contains(normalized);
       final matchesTopic = topic == null || lesson.topic == topic;
       return matchesQuery && matchesTopic;
-    }).toList();
+    }).toList(growable: false);
   }
 
   /// Applies a new search [query] and resets to the first page of results.
@@ -151,15 +160,15 @@ class LessonCubit extends Cubit<LessonState> {
       _emitFiltered(query: state.searchQuery, topic: topic);
 
   void _emitFiltered({required String query, required String? topic}) {
-    final filtered = _applyFilters(_allLessons, query, topic);
-    final firstPage = filtered.take(pageSize).toList();
+    _filtered = _computeFiltered(query, topic);
+    final firstPage = _filtered.take(pageSize).toList();
     emit(
       state.copyWith(
         status: LessonStatus.success,
         searchQuery: query,
         selectedTopic: topic,
         lessons: firstPage,
-        hasReachedMax: firstPage.length >= filtered.length,
+        hasReachedMax: firstPage.length >= _filtered.length,
         errorMessage: null,
       ),
     );

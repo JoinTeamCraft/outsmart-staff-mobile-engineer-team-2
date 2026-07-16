@@ -25,6 +25,14 @@ class _LessonFilterBarState extends State<LessonFilterBar> {
   final TextEditingController _controller = TextEditingController();
   Timer? _debounceTimer;
 
+  @override
+  void initState() {
+    super.initState();
+    // Reflect any query already in state (e.g. after a rebuild or a state
+    // restore) so the field text and the filtered list never disagree.
+    _controller.text = context.read<LessonCubit>().state.searchQuery;
+  }
+
   void _onQueryChanged(String value) {
     // Restart the timer on each keystroke; only the last one fires.
     _debounceTimer?.cancel();
