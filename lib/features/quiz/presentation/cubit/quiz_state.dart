@@ -1,11 +1,12 @@
 import 'package:equatable/equatable.dart';
 import '../../domain/quiz.dart';
 
-/// Mutually exclusive lifecycle states for an in-progress quiz attempt.
+/// Mutually exclusive lifecycle states for loading and completing a quiz.
 ///
-/// [complete] is the specific signal OU-18 (animation sync) should listen
-/// for to trigger the streak celebration — see [QuizCubit.answerQuestion].
-enum QuizStatus { initial, loading, inProgress, complete, failure }
+/// [empty] indicates the requested lesson has no quiz available.
+/// [complete] is the signal OU-18 should listen for to trigger the streak
+/// celebration.
+enum QuizStatus { initial, loading, empty, inProgress, complete, failure}
 
 /// Immutable state for [QuizCubit]. Compared by value via [Equatable] so
 /// `BlocBuilder` only rebuilds when a field actually changes.
@@ -23,10 +24,9 @@ class QuizState extends Equatable {
   /// Running count of correctly answered questions this attempt.
   final int correctAnswers;
 
-  /// Human-readable failure reason, set only when [status] is
-  /// [QuizStatus.failure]. Sourced from `ApiException.message`, or a plain
-  /// "no quiz found" message when the repository returns no quiz for the
-  /// lesson — see [QuizCubit].
+  /// Human-readable failure reason.
+  /// Only populated when [status] is [QuizStatus.failure], typically from
+  /// an [ApiException].
   final String? errorMessage;
 
   const QuizState({
@@ -37,9 +37,18 @@ class QuizState extends Equatable {
     this.errorMessage,
   });
 
+
+  /// Convenience for UI listeners that need to handle the expected case where
+  /// a lesson does not have quiz content available.
+  bool get isEmpty => status == QuizStatus.empty;
+
   /// Convenience for listeners (OU-18) that only care about the specific
   /// moment a quiz attempt finishes, without comparing the enum directly.
   bool get isComplete => status == QuizStatus.complete;
+
+  /// Indicates whether the current state represents an unrecoverable quiz
+  /// loading failure, such as a network or parsing error.
+  bool get hasFailure => status == QuizStatus.failure;
 
   /// Returns a copy with only the given fields replaced — every other field
   /// is carried over unchanged. Always emit through this rather than

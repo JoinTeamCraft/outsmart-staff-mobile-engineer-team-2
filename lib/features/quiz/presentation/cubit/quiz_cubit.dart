@@ -10,28 +10,42 @@ class QuizCubit extends Cubit<QuizState> {
 
   Future<void> loadQuiz(String lessonId, {bool forceRefresh = false}) async {
     emit(state.copyWith(status: QuizStatus.loading));
+
     try {
       final quiz = await repository.getQuizByLessonId(
         lessonId,
         forceRefresh: forceRefresh,
       );
-      // `null` here means "no quiz exists for this lesson" — a normal empty
-      // state per QuizRepository's contract, not a failure.
+
+      // `null` or an empty quiz means this lesson has no quiz available.
+      // This is an expected business state, not an error.
       if (quiz == null || quiz.isEmpty) {
-        emit(state.copyWith(
-          status: QuizStatus.failure,
-          errorMessage: 'No quiz found for lesson $lessonId',
-        ));
+        emit(
+          state.copyWith(
+            status: QuizStatus.empty,
+            quiz: null,
+            errorMessage: null,
+          ),
+        );
         return;
       }
-      emit(state.copyWith(
-        status: QuizStatus.inProgress,
-        quiz: quiz,
-        currentQuestionIndex: 0,
-        correctAnswers: 0,
-      ));
+
+      emit(
+        state.copyWith(
+          status: QuizStatus.inProgress,
+          quiz: quiz,
+          currentQuestionIndex: 0,
+          correctAnswers: 0,
+          errorMessage: null,
+        ),
+      );
     } on ApiException catch (e) {
-      emit(state.copyWith(status: QuizStatus.failure, errorMessage: e.message));
+      emit(
+        state.copyWith(
+          status: QuizStatus.failure,
+          errorMessage: e.message,
+        ),
+      );
     }
   }
 
