@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../cubit/lesson_cubit.dart';
 import '../cubit/lesson_state.dart';
 import '../widgets/lesson_card.dart';
+import '../widgets/lesson_filter_bar.dart';
 
 /// OU-6 + OU-10: Main lesson feed with virtualized scrolling and client-side
 /// pagination. The UI renders directly from LessonCubit state.
@@ -16,7 +17,6 @@ class LessonFeedScreen extends StatefulWidget {
 
 class _LessonFeedScreenState extends State<LessonFeedScreen> {
   final ScrollController _scrollController = ScrollController();
-
 
   @override
   void initState() {
@@ -46,6 +46,12 @@ class _LessonFeedScreenState extends State<LessonFeedScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('StreakLearn'),
+        // OU-9: search field + topic chips live in the AppBar's bottom slot so
+        // they stay visible across the loading/empty/list states below.
+        bottom: const PreferredSize(
+          preferredSize: Size.fromHeight(120),
+          child: LessonFilterBar(),
+        ),
       ),
       body: BlocBuilder<LessonCubit, LessonState>(
         builder: (context, state) {
@@ -70,8 +76,15 @@ class _LessonFeedScreenState extends State<LessonFeedScreen> {
           }
 
           if (!hasLessons) {
-            return const Center(
-              child: Text('No lessons yet.'),
+            // Distinguish "no data at all" from "filter matched nothing" (OU-9).
+            final isFiltering =
+                state.searchQuery.isNotEmpty || state.selectedTopic != null;
+            return Center(
+              child: Text(
+                isFiltering
+                    ? 'No lessons match your search.'
+                    : 'No lessons yet.',
+              ),
             );
           }
 
