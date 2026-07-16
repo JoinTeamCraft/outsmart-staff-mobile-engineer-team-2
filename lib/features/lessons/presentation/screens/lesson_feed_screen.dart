@@ -33,7 +33,7 @@ class _LessonFeedScreenState extends State<LessonFeedScreen> {
   void _onScroll() {
     final position = _scrollController.position;
 
-    if (position.pixels == position.maxScrollExtent)  {
+    if (position.pixels == position.maxScrollExtent) {
       context.read<LessonCubit>().loadMoreLessons();
     }
   }
@@ -61,9 +61,7 @@ class _LessonFeedScreenState extends State<LessonFeedScreen> {
             return _ErrorView(
               message: state.errorMessage ?? 'Something went wrong.',
               onRetry: () {
-                context
-                    .read<LessonCubit>()
-                    .loadLessons(forceRefresh: true);
+                context.read<LessonCubit>().loadLessons(forceRefresh: true);
               },
             );
           }
@@ -74,17 +72,13 @@ class _LessonFeedScreenState extends State<LessonFeedScreen> {
             );
           }
 
-          final showFooterLoader =
-              state.status == LessonStatus.loadingMore;
+          final showFooterLoader = state.status == LessonStatus.loadingMore;
 
-          final itemCount =
-              state.lessons.length + (showFooterLoader ? 1 : 0);
+          final itemCount = state.lessons.length + (showFooterLoader ? 1 : 0);
 
           return RefreshIndicator(
             onRefresh: () async {
-              await context
-                  .read<LessonCubit>()
-                  .loadLessons(forceRefresh: true);
+              await context.read<LessonCubit>().loadLessons(forceRefresh: true);
             },
             child: ListView.builder(
               key: const PageStorageKey('lesson_feed_list'),
@@ -93,10 +87,8 @@ class _LessonFeedScreenState extends State<LessonFeedScreen> {
               physics: const AlwaysScrollableScrollPhysics(),
               itemCount: itemCount,
               cacheExtent: 500,
-
               itemBuilder: (context, index) {
-                if (showFooterLoader &&
-                    index == state.lessons.length) {
+                if (showFooterLoader && index == state.lessons.length) {
                   return const Padding(
                     padding: EdgeInsets.symmetric(vertical: 24),
                     child: Center(

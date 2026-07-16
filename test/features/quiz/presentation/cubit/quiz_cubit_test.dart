@@ -169,12 +169,12 @@ void main() {
     'clears previous quiz data when loading another quiz',
     build: () {
       when(
-            () => repository.getQuizByLessonId(
+        () => repository.getQuizByLessonId(
           any(),
           forceRefresh: any(named: 'forceRefresh'),
         ),
       ).thenAnswer(
-            (_) async => testQuiz,
+        (_) async => testQuiz,
       );
 
       return QuizCubit(repository);

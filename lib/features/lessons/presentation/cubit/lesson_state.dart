@@ -11,13 +11,7 @@ const _unset = Object();
 /// illegal combinations (e.g. loading + error at once) can't be represented.
 /// `loadingMore` is reserved for OU-10's pagination — unused by OU-2, but
 /// defined here so the state shape doesn't need to change when OU-10 lands.
-enum LessonStatus {
-  initial,
-  loading,
-  loadingMore,
-  success,
-  failure
-}
+enum LessonStatus { initial, loading, loadingMore, success, failure }
 
 /// Immutable state for [LessonCubit]. Compared by value via [Equatable] so
 /// `BlocBuilder` only rebuilds when a field actually changes.

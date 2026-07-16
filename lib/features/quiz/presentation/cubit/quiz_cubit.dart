@@ -9,9 +9,9 @@ class QuizCubit extends Cubit<QuizState> {
   QuizCubit(this.repository) : super(const QuizState());
 
   Future<void> loadQuiz(
-      String lessonId, {
-        bool forceRefresh = false,
-      }) async {
+    String lessonId, {
+    bool forceRefresh = false,
+  }) async {
     if (state.status == QuizStatus.loading) return;
 
     emit(

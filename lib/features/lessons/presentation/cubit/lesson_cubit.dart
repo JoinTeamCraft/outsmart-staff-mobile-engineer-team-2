@@ -85,10 +85,8 @@ class LessonCubit extends Cubit<LessonState> {
       ),
     );
 
-    final nextPage = _allLessons
-        .skip(state.lessons.length)
-        .take(pageSize)
-        .toList();
+    final nextPage =
+        _allLessons.skip(state.lessons.length).take(pageSize).toList();
 
     final updatedLessons = [
       ...state.lessons,
@@ -102,4 +100,5 @@ class LessonCubit extends Cubit<LessonState> {
         hasReachedMax: updatedLessons.length >= _allLessons.length,
       ),
     );
-  }}
+  }
+}
