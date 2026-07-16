@@ -17,7 +17,7 @@ class LessonCubit extends Cubit<LessonState> {
   final LessonRepository repository;
   static const int pageSize = 2;
 
-  List<Lesson> _allLessons = [];
+  final List<Lesson> _allLessons = [];
 
   LessonCubit(this.repository) : super(const LessonState());
 
@@ -37,7 +37,12 @@ class LessonCubit extends Cubit<LessonState> {
     );
 
     try {
-      _allLessons = await repository.getLessons(forceRefresh: forceRefresh);
+      final lessons = await repository.getLessons(forceRefresh: forceRefresh);
+
+      _allLessons
+        ..clear()
+        ..addAll(lessons);
+
       final firstPage = _allLessons.take(pageSize).toList();
 
       emit(
