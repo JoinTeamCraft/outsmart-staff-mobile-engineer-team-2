@@ -20,7 +20,7 @@ class LessonCard extends StatelessWidget {
         // a tablet alike. Clamped so it never gets so small it's useless
         // or so large it dwarfs the text on a wide screen.
         final double thumbnailSize =
-        (constraints.maxWidth * 0.18).clamp(56.0, 96.0).toDouble();
+            (constraints.maxWidth * 0.18).clamp(56.0, 96.0).toDouble();
 
         // Decode resolution follows the device's actual pixel density,
         // not a hardcoded guess.
@@ -29,7 +29,8 @@ class LessonCard extends StatelessWidget {
 
         return Card(
           margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
           clipBehavior: Clip.antiAlias,
           child: InkWell(
             onTap: onTap,
