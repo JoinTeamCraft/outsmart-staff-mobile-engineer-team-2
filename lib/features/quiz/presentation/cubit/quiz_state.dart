@@ -67,8 +67,7 @@ class QuizState extends Equatable {
     return QuizState(
       status: status ?? this.status,
       quiz: identical(quiz, _unset) ? this.quiz : quiz as Quiz?,
-      currentQuestionIndex:
-      currentQuestionIndex ?? this.currentQuestionIndex,
+      currentQuestionIndex: currentQuestionIndex ?? this.currentQuestionIndex,
       correctAnswers: correctAnswers ?? this.correctAnswers,
       errorMessage: identical(errorMessage, _unset)
           ? this.errorMessage
