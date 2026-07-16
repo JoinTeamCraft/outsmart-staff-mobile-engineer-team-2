@@ -38,7 +38,10 @@ class _QuizScreenState extends State<QuizScreen> {
   @override
   void initState() {
     super.initState();
-    // Load this lesson's quiz into the app-wide cubit on entry.
+    // Load this lesson's quiz into the app-wide QuizCubit. That cubit is
+    // provided in AppProviders (above the Navigator), so it is always in scope
+    // for any route pushed within the app; read() fails fast with a clear
+    // ProviderNotFoundException if that wiring invariant is ever broken.
     context.read<QuizCubit>().loadQuiz(widget.lessonId);
   }
 
@@ -118,7 +121,12 @@ class _QuizQuestionView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final quiz = state.quiz!;
+    // inProgress always carries a quiz (QuizCubit sets it before emitting this
+    // status). The assert documents that invariant in debug; in release we bail
+    // out gracefully rather than crash if it is ever violated.
+    final quiz = state.quiz;
+    assert(quiz != null, 'QuizStatus.inProgress must carry a non-null quiz');
+    if (quiz == null) return const SizedBox.shrink();
     final index = state.currentQuestionIndex;
     final question = quiz.questions[index];
     final total = quiz.questionCount;
@@ -153,6 +161,7 @@ class _QuizQuestionView extends StatelessWidget {
               child: ListView.builder(
                 itemCount: question.options.length,
                 itemBuilder: (context, i) => QuizOptionTile(
+                  key: ValueKey('${question.id}_$i'),
                   label: question.options[i],
                   state: _optionState(question, i, selectedIndex),
                   enabled: !answered,

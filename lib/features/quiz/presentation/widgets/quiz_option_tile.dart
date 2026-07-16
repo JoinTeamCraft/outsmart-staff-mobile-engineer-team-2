@@ -60,37 +60,56 @@ class QuizOptionTile extends StatelessWidget {
         ),
     };
 
-    return Semantics(
-      button: true,
-      enabled: enabled,
-      selected: state != QuizOptionState.neutral,
-      label: label,
-      child: GestureDetector(
-        onTap: enabled ? onTap : null,
-        behavior: HitTestBehavior.opaque,
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 200),
-          curve: Curves.easeOut,
-          margin: const EdgeInsets.symmetric(vertical: 6),
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-          decoration: BoxDecoration(
-            color: background,
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: border, width: 1.5),
-          ),
-          child: Row(
-            children: [
-              Expanded(
-                child: Text(
-                  label,
-                  style: Theme.of(context).textTheme.bodyLarge,
-                ),
+    // Announce the outcome to screen readers once an answer is locked in, so
+    // options with similar text stay distinguishable by state (not just label).
+    final String? semanticValue = switch (state) {
+      QuizOptionState.correct => 'Correct',
+      QuizOptionState.incorrect => 'Incorrect',
+      QuizOptionState.neutral => null,
+    };
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 6),
+      child: Semantics(
+        button: true,
+        enabled: enabled,
+        selected: state != QuizOptionState.neutral,
+        value: semanticValue,
+        label: label,
+        child: Material(
+          // InkWell needs a Material ancestor for its ink. A transparent
+          // Material lets the AnimatedContainer own the visible surface while
+          // InkWell adds focus/hover/ripple and keyboard activation — the
+          // Material semantics a bare GestureDetector lacks.
+          color: Colors.transparent,
+          borderRadius: BorderRadius.circular(12),
+          clipBehavior: Clip.antiAlias,
+          child: InkWell(
+            onTap: enabled ? onTap : null,
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 200),
+              curve: Curves.easeOut,
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+              decoration: BoxDecoration(
+                color: background,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: border, width: 1.5),
               ),
-              if (icon != null) ...[
-                const SizedBox(width: 12),
-                Icon(icon, color: iconColor),
-              ],
-            ],
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      label,
+                      style: Theme.of(context).textTheme.bodyLarge,
+                    ),
+                  ),
+                  if (icon != null) ...[
+                    const SizedBox(width: 12),
+                    Icon(icon, color: iconColor),
+                  ],
+                ],
+              ),
+            ),
           ),
         ),
       ),
