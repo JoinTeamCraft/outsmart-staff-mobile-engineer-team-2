@@ -91,12 +91,35 @@ class _QuizScreenState extends State<QuizScreen> {
                 onDone: () => Navigator.of(context).maybePop(),
               );
             case QuizStatus.inProgress:
-              return _QuizQuestionView(
-                state: state,
-                selectedIndex: _selectedIndex,
-                onOptionTap: _onOptionTap,
-                onNext: _onNext,
-              );
+              {
+                final quiz = state.quiz;
+                final index = state.currentQuestionIndex;
+                if (quiz == null ||
+                    index < 0 ||
+                    index >= quiz.questions.length) {
+                  // QuizCubit keeps quiz/index consistent for inProgress, so
+                  // this is unreachable in practice. If that invariant is ever
+                  // broken we surface the same error + retry as a load failure
+                  // rather than render a blank screen, so it stays diagnosable.
+                  return _CenteredMessage(
+                    icon: Icons.error_outline,
+                    message: 'Something went wrong loading this question.',
+                    onRetry: () => context.read<QuizCubit>().loadQuiz(
+                          widget.lessonId,
+                          forceRefresh: true,
+                        ),
+                  );
+                }
+                return _QuizQuestionView(
+                  question: quiz.questions[index],
+                  questionNumber: index + 1,
+                  totalQuestions: quiz.questionCount,
+                  isLastQuestion: index == quiz.questionCount - 1,
+                  selectedIndex: _selectedIndex,
+                  onOptionTap: _onOptionTap,
+                  onNext: _onNext,
+                );
+              }
           }
         },
       ),
@@ -105,38 +128,31 @@ class _QuizScreenState extends State<QuizScreen> {
 }
 
 /// The active-question layout: progress indicator, prompt, animated options,
-/// and the Next/Finish button.
+/// and the Next/Finish button. Receives a fully-resolved, non-null [question]
+/// and progress numbers, so it never touches nullable state or index bounds —
+/// the QuizScreen resolves those once before building this.
 class _QuizQuestionView extends StatelessWidget {
   const _QuizQuestionView({
-    required this.state,
+    required this.question,
+    required this.questionNumber,
+    required this.totalQuestions,
+    required this.isLastQuestion,
     required this.selectedIndex,
     required this.onOptionTap,
     required this.onNext,
   });
 
-  final QuizState state;
+  final Question question;
+  final int questionNumber;
+  final int totalQuestions;
+  final bool isLastQuestion;
   final int? selectedIndex;
   final ValueChanged<int> onOptionTap;
   final VoidCallback onNext;
 
   @override
   Widget build(BuildContext context) {
-    // inProgress always carries a quiz (QuizCubit sets it before emitting this
-    // status). The assert documents that invariant in debug; in release we bail
-    // out gracefully rather than crash if it is ever violated.
-    final quiz = state.quiz;
-    assert(quiz != null, 'QuizStatus.inProgress must carry a non-null quiz');
-    if (quiz == null) return const SizedBox.shrink();
-    final index = state.currentQuestionIndex;
-    // Defensive: a consistent QuizCubit never emits an out-of-range index, but
-    // bail out gracefully rather than throw a RangeError if it ever does.
-    if (index < 0 || index >= quiz.questions.length) {
-      return const SizedBox.shrink();
-    }
-    final question = quiz.questions[index];
-    final total = quiz.questionCount;
     final answered = selectedIndex != null;
-    final isLast = index == total - 1;
 
     return SafeArea(
       child: Padding(
@@ -145,14 +161,15 @@ class _QuizQuestionView extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Text(
-              'Question ${index + 1} of $total',
+              'Question $questionNumber of $totalQuestions',
               style: Theme.of(context).textTheme.labelLarge,
             ),
             const SizedBox(height: 8),
             ClipRRect(
               borderRadius: BorderRadius.circular(8),
               child: LinearProgressIndicator(
-                value: total == 0 ? 0 : (index + 1) / total,
+                value:
+                    totalQuestions == 0 ? 0 : questionNumber / totalQuestions,
                 minHeight: 8,
               ),
             ),
@@ -180,7 +197,7 @@ class _QuizQuestionView extends StatelessWidget {
               child: FilledButton(
                 // Enabled only once an option is chosen.
                 onPressed: answered ? onNext : null,
-                child: Text(isLast ? 'Finish' : 'Next'),
+                child: Text(isLastQuestion ? 'Finish' : 'Next'),
               ),
             ),
           ],

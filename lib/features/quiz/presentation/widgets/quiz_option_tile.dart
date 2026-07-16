@@ -33,24 +33,32 @@ class QuizOptionTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final isDark = theme.brightness == Brightness.dark;
 
-    // Resolve the tile's appearance from its answer state. Correct/incorrect
-    // use fixed semantic green/red (legible in light and dark); neutral leans
-    // on theme surface tokens so it adapts to either brightness.
+    // Material 3 has a semantic error role but no success role, so we pair the
+    // theme's error colour for "incorrect" with a brightness-adjusted green for
+    // "correct". Backgrounds are translucent tints over the surface, so the
+    // option label keeps full contrast in both light and dark themes; neutral
+    // leans on surface tokens.
+    final Color correctAccent =
+        isDark ? Colors.green.shade400 : Colors.green.shade700;
+    final double tintAlpha = isDark ? 0.22 : 0.12;
+
     final (Color background, Color border, IconData? icon, Color iconColor) =
         switch (state) {
       QuizOptionState.correct => (
-          Colors.green.withValues(alpha: 0.15),
-          Colors.green,
+          correctAccent.withValues(alpha: tintAlpha),
+          correctAccent,
           Icons.check_circle,
-          Colors.green,
+          correctAccent,
         ),
       QuizOptionState.incorrect => (
-          Colors.red.withValues(alpha: 0.15),
-          Colors.red,
+          scheme.error.withValues(alpha: tintAlpha),
+          scheme.error,
           Icons.cancel,
-          Colors.red,
+          scheme.error,
         ),
       QuizOptionState.neutral => (
           scheme.surfaceContainerHighest.withValues(alpha: 0.4),
