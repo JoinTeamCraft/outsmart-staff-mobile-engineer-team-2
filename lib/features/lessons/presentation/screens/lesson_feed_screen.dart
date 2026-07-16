@@ -50,6 +50,7 @@ class LessonFeedScreen extends StatelessWidget {
             onRefresh: () =>
                 context.read<LessonCubit>().loadLessons(forceRefresh: true),
             child: ListView.builder(
+              key: const PageStorageKey('lesson_feed_list'),
               padding: const EdgeInsets.symmetric(vertical: 8),
               itemCount: state.lessons.length,
               itemBuilder: (context, index) {
