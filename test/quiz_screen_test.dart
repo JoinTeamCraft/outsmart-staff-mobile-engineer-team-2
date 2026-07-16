@@ -8,15 +8,18 @@ import 'package:streaklearn/features/quiz/presentation/cubit/quiz_cubit.dart';
 import 'package:streaklearn/features/quiz/presentation/screens/quiz_screen.dart';
 import 'package:streaklearn/features/quiz/presentation/widgets/quiz_option_tile.dart';
 
-class _FakeQuizRepo implements QuizRepository {
+// Extends Fake (flutter_test) so any repository member the test does not stub
+// throws UnimplementedError instead of silently misbehaving — type-safe, unlike
+// a catch-all noSuchMethod. Only getQuizByLessonId is exercised here.
+class _FakeQuizRepo extends Fake implements QuizRepository {
   _FakeQuizRepo(this._quiz);
   final Quiz? _quiz;
   @override
-  Future<Quiz?> getQuizByLessonId(String lessonId,
-          {bool forceRefresh = false}) async =>
+  Future<Quiz?> getQuizByLessonId(
+    String lessonId, {
+    bool forceRefresh = false,
+  }) async =>
       _quiz;
-  @override
-  noSuchMethod(Invocation i) => super.noSuchMethod(i);
 }
 
 Quiz _quizWith2() => const Quiz(
