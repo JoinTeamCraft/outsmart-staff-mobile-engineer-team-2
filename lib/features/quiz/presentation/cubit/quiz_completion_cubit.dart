@@ -22,13 +22,13 @@ import 'quiz_state.dart';
 /// increment + firing animations) is owned by OU-18; OU-13 only defines and
 /// emits the event. See the OU-13/OU-18 boundary agreed in team chat.
 ///
-/// Emission caveat: [Cubit] suppresses an emit equal to the current state, and
-/// [QuizResult] is [Equatable]. Two back-to-back completions with an identical
-/// score are therefore distinguished only by [QuizResult.completedAt]. In
-/// production `DateTime.now()` always returns a distinct timestamp, so every
-/// completion emits. Tests using a fixed mock clock (OU-23) must advance it
-/// between completions, or the second (identical) result is deduped and no
-/// event fires.
+/// State lifecycle: the state holds the latest [QuizResult] only from a
+/// completion until the next quiz starts, then resets to `null`. This keeps the
+/// cubit event-like — a widget that reads `state` never processes a stale
+/// result from an old attempt — and, because the state passes through `null`
+/// between attempts, two completions with an identical score still both emit
+/// (each is a `null -> result` change), independent of the timestamp. Consumers
+/// should filter the `null` the stream emits on reset (e.g. `whereType`).
 class QuizCompletionCubit extends Cubit<QuizResult?> {
   QuizCompletionCubit(this._quizCubit, {DateTime Function()? clock})
       : _now = clock ?? DateTime.now,
@@ -43,11 +43,22 @@ class QuizCompletionCubit extends Cubit<QuizResult?> {
   late QuizStatus _lastStatus;
 
   void _onQuizState(QuizState state) {
+    final status = state.status;
+
+    // A new quiz starting clears any previous result, so a widget reading
+    // `state` never sees a stale result from an old attempt, and consecutive
+    // completions always emit (each is a null -> result change).
+    if (status == QuizStatus.loading && _lastStatus != QuizStatus.loading) {
+      _lastStatus = status;
+      emit(null);
+      return;
+    }
+
     // Emit only on the transition INTO complete, so the result fires once per
     // attempt (the cubit stays in `complete` until the next quiz loads).
-    final justCompleted = state.status == QuizStatus.complete &&
-        _lastStatus != QuizStatus.complete;
-    _lastStatus = state.status;
+    final justCompleted =
+        status == QuizStatus.complete && _lastStatus != QuizStatus.complete;
+    _lastStatus = status;
     if (!justCompleted) return;
 
     final quiz = state.quiz;
