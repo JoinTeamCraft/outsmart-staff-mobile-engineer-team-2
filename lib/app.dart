@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:streaklearn/core/di/app_providers.dart';
+import 'package:streaklearn/shared/widgets/state_demo_widget.dart';
 import 'core/theme/app_theme.dart';
 
 class StreakLearnApp extends StatelessWidget {
@@ -6,15 +8,17 @@ class StreakLearnApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'StreakLearn',
-      theme: AppTheme.lightTheme,
-      darkTheme: AppTheme.darkTheme,
-      themeMode: ThemeMode.system,
-      initialRoute: '/',
-      routes: {
-        '/': (context) => const HomeScreenPlaceholder(),
-      },
+    return AppProviders(
+      child: MaterialApp(
+        title: 'StreakLearn',
+        theme: AppTheme.lightTheme,
+        darkTheme: AppTheme.darkTheme,
+        themeMode: ThemeMode.system,
+        initialRoute: '/',
+        routes: {
+          '/': (context) => const HomeScreenPlaceholder(),
+        },
+      ),
     );
   }
 }
@@ -44,6 +48,7 @@ class HomeScreenPlaceholder extends StatelessWidget {
                 textAlign: TextAlign.center,
               ),
             ),
+            const StateDemoWidget(),
           ],
         ),
       ),
