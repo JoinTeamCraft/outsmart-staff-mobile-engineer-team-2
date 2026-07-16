@@ -48,7 +48,7 @@ class HomeScreenPlaceholder extends StatelessWidget {
                 textAlign: TextAlign.center,
               ),
             ),
-            StateDemoWidget(),
+            const StateDemoWidget(),
           ],
         ),
       ),
