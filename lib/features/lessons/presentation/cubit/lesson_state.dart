@@ -9,8 +9,8 @@ const _unset = Object();
 ///
 /// An enum rather than separate booleans (`isLoading`, `hasError`, ...) so
 /// illegal combinations (e.g. loading + error at once) can't be represented.
-/// `loadingMore` is reserved for OU-10's pagination — unused by OU-2, but
-/// defined here so the state shape doesn't need to change when OU-10 lands.
+/// `loadingMore` represents fetching the next page while keeping existing
+/// lessons visible.
 enum LessonStatus { initial, loading, loadingMore, success, failure }
 
 /// Immutable state for [LessonCubit]. Compared by value via [Equatable] so
@@ -23,8 +23,8 @@ class LessonState extends Equatable {
   /// Empty during initial loading or refresh until data is available.
   final List<Lesson> lessons;
 
-  /// Indicates whether all available lessons have already been loaded.
-  /// When false, LessonCubit can request another page.
+  /// True when all available lessons have been loaded.
+  /// Remains false while additional pages are available to load.
   final bool hasReachedMax;
 
   /// Human-readable failure reason, set only when [status] is
