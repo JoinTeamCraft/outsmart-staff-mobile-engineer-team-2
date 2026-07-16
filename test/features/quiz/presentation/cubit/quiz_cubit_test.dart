@@ -51,12 +51,12 @@ void main() {
       'emits loading then inProgress when quiz exists',
       build: () {
         when(
-              () => repository.getQuizByLessonId(
+          () => repository.getQuizByLessonId(
             'lesson-1',
-            forceRefresh: false,
+            forceRefresh: any(named: 'forceRefresh'),
           ),
         ).thenAnswer(
-              (_) async => testQuiz,
+          (_) async => testQuiz,
         );
 
         return QuizCubit(repository);
@@ -77,12 +77,12 @@ void main() {
       'emits empty when lesson has no quiz',
       build: () {
         when(
-              () => repository.getQuizByLessonId(
+          () => repository.getQuizByLessonId(
             'lesson-1',
-            forceRefresh: false,
+            forceRefresh: any(named: 'forceRefresh'),
           ),
         ).thenAnswer(
-              (_) async => null,
+          (_) async => null,
         );
 
         return QuizCubit(repository);
@@ -102,9 +102,9 @@ void main() {
       'emits failure when repository throws ApiException',
       build: () {
         when(
-              () => repository.getQuizByLessonId(
+          () => repository.getQuizByLessonId(
             'lesson-1',
-            forceRefresh: false,
+            forceRefresh: any(named: 'forceRefresh'),
           ),
         ).thenThrow(
           const NetworkException(

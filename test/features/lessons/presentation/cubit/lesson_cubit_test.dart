@@ -20,8 +20,12 @@ void main() {
     'emits loading then success when lessons load successfully',
     build: () {
       when(
-            () => repository.getLessons(),
-      ).thenAnswer((_) async => []);
+        () => repository.getLessons(
+          forceRefresh: any(named: 'forceRefresh'),
+        ),
+      ).thenAnswer(
+        (_) async => [],
+      );
 
       return LessonCubit(repository);
     },
@@ -42,7 +46,9 @@ void main() {
     'emits failure when repository throws ApiException',
     build: () {
       when(
-            () => repository.getLessons(),
+        () => repository.getLessons(
+          forceRefresh: any(named: 'forceRefresh'),
+        ),
       ).thenThrow(
         const NetworkException('Network failed'),
       );
