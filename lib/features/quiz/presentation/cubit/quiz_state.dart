@@ -52,8 +52,9 @@ class QuizState extends Equatable {
   /// loading failure, such as a network or parsing error.
   bool get hasFailure => status == QuizStatus.failure;
 
-  /// Nullable fields use an explicit sentinel internally so passing null
-  /// clears the existing value instead of preserving it. Every other field
+  /// Uses sentinels for nullable fields that need to support explicit clearing.
+  /// Passing `quiz: null` or `errorMessage: null` explicitly removes the
+  /// existing value instead of preserving it. Every other field
   /// is carried over unchanged. Always emit through this rather than
   /// constructing `QuizState(...)` directly.
   QuizState copyWith({
@@ -61,14 +62,17 @@ class QuizState extends Equatable {
     Object? quiz = _unset,
     int? currentQuestionIndex,
     int? correctAnswers,
-    String? errorMessage,
+    Object? errorMessage = _unset,
   }) {
     return QuizState(
       status: status ?? this.status,
       quiz: identical(quiz, _unset) ? this.quiz : quiz as Quiz?,
-      currentQuestionIndex: currentQuestionIndex ?? this.currentQuestionIndex,
+      currentQuestionIndex:
+      currentQuestionIndex ?? this.currentQuestionIndex,
       correctAnswers: correctAnswers ?? this.correctAnswers,
-      errorMessage: errorMessage,
+      errorMessage: identical(errorMessage, _unset)
+          ? this.errorMessage
+          : errorMessage as String?,
     );
   }
 
