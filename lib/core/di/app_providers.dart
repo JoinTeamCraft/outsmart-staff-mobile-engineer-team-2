@@ -19,7 +19,8 @@ class AppProviders extends StatelessWidget {
     return MultiBlocProvider(
       providers: [
         BlocProvider(
-          create: (_) => LessonCubit(locator<LessonRepository>())..loadLessons(),
+          create: (_) =>
+              LessonCubit(locator<LessonRepository>())..loadLessons(),
         ),
         BlocProvider(create: (_) => QuizCubit(locator<QuizRepository>())),
         BlocProvider(create: (_) => StreakCubit()),

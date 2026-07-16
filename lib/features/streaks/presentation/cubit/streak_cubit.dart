@@ -9,7 +9,7 @@ class StreakCubit extends Cubit<StreakState> {
     emit(state.copyWith(
       currentStreak: newStreak,
       longestStreak:
-      newStreak > state.longestStreak ? newStreak : state.longestStreak,
+          newStreak > state.longestStreak ? newStreak : state.longestStreak,
       celebrationPending: true,
     ));
   }

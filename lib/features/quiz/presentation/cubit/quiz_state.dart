@@ -6,7 +6,7 @@ import '../../domain/quiz.dart';
 /// [empty] indicates the requested lesson has no quiz available.
 /// [complete] is the signal OU-18 should listen for to trigger the streak
 /// celebration.
-enum QuizStatus { initial, loading, empty, inProgress, complete, failure}
+enum QuizStatus { initial, loading, empty, inProgress, complete, failure }
 
 /// Immutable state for [QuizCubit]. Compared by value via [Equatable] so
 /// `BlocBuilder` only rebuilds when a field actually changes.
@@ -36,7 +36,6 @@ class QuizState extends Equatable {
     this.correctAnswers = 0,
     this.errorMessage,
   });
-
 
   /// Convenience for UI listeners that need to handle the expected case where
   /// a lesson does not have quiz content available.

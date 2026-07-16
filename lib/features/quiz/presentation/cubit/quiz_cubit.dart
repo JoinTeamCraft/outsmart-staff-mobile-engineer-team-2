@@ -71,7 +71,7 @@ class QuizCubit extends Cubit<QuizState> {
     emit(state.copyWith(
       status: isLastQuestion ? QuizStatus.complete : QuizStatus.inProgress,
       currentQuestionIndex:
-      isLastQuestion ? state.currentQuestionIndex : nextIndex,
+          isLastQuestion ? state.currentQuestionIndex : nextIndex,
       correctAnswers: state.correctAnswers + (isCorrect ? 1 : 0),
     ));
   }
