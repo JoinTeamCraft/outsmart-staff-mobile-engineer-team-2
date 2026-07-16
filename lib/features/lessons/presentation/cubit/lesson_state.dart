@@ -25,13 +25,12 @@ class LessonState extends Equatable {
   /// Current lifecycle phase — see [LessonStatus].
   final LessonStatus status;
 
-  /// Lessons currently loaded and ready to display. Empty until the first
-  /// successful fetch.
+  /// Lessons currently loaded and ready to display.
+  /// Empty during initial loading or refresh until data is available.
   final List<Lesson> lessons;
 
-  /// True once every available lesson has been loaded. Always `true` after
-  /// a successful OU-2 fetch (single-shot, no paging); OU-10 will set this
-  /// to `false` while more pages remain.
+  /// Indicates whether all available lessons have already been loaded.
+  /// When false, LessonCubit can request another page.
   final bool hasReachedMax;
 
   /// Human-readable failure reason, set only when [status] is
