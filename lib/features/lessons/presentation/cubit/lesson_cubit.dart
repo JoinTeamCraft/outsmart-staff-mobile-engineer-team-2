@@ -21,6 +21,18 @@ class LessonCubit extends Cubit<LessonState> {
   /// Complete dataset used for client-side pagination.
   final List<Lesson> _allLessons = [];
 
+  /// Distinct topics, cached; recomputed only when [_allLessons] changes.
+  List<String> _topics = const [];
+
+  /// Lowercased lesson titles, index-aligned with [_allLessons]. Precomputed
+  /// once when [_allLessons] changes so search filtering does no per-pass
+  /// `toLowerCase()` allocation.
+  List<String> _titlesLower = const [];
+
+  /// Lessons matching the active search/topic, cached; recomputed only when the
+  /// query, topic, or [_allLessons] changes — never on every read or rebuild.
+  List<Lesson> _filtered = const [];
+
   /// Loads the first page of lessons.
   ///
   /// [forceRefresh] bypasses repository cache when refreshing.
@@ -44,13 +56,15 @@ class LessonCubit extends Cubit<LessonState> {
         ..clear()
         ..addAll(lessons);
 
-      final firstPage = _allLessons.take(pageSize).toList();
+      _recomputeDerived();
+      _filtered = _computeFiltered(state.searchQuery, state.selectedTopic);
+      final firstPage = _filtered.take(pageSize).toList();
 
       emit(
         state.copyWith(
           status: LessonStatus.success,
           lessons: firstPage,
-          hasReachedMax: firstPage.length >= _allLessons.length,
+          hasReachedMax: firstPage.length >= _filtered.length,
           errorMessage: null,
         ),
       );
@@ -89,7 +103,7 @@ class LessonCubit extends Cubit<LessonState> {
 
     try {
       final nextPage =
-          _allLessons.skip(state.lessons.length).take(pageSize).toList();
+          _filtered.skip(state.lessons.length).take(pageSize).toList();
 
       final updatedLessons = [
         ...state.lessons,
@@ -100,7 +114,7 @@ class LessonCubit extends Cubit<LessonState> {
         state.copyWith(
           status: LessonStatus.success,
           lessons: updatedLessons,
-          hasReachedMax: updatedLessons.length >= _allLessons.length,
+          hasReachedMax: updatedLessons.length >= _filtered.length,
           errorMessage: null,
         ),
       );
@@ -120,5 +134,57 @@ class LessonCubit extends Cubit<LessonState> {
         ),
       );
     }
+  }
+
+  /// Distinct topics for the filter chips (OU-9) — a cached O(1) read.
+  List<String> get topics => _topics;
+
+  /// Recomputes cached data derived from [_allLessons] — distinct topics and
+  /// the index-aligned lowercased titles. Called only when [_allLessons]
+  /// changes, keeping both caches in lockstep with it.
+  void _recomputeDerived() {
+    _topics = _allLessons.map((l) => l.topic).toSet().toList()..sort();
+    _titlesLower =
+        _allLessons.map((l) => l.title.toLowerCase()).toList(growable: false);
+  }
+
+  /// Filters [_allLessons] by [query] (case-insensitive title match) and
+  /// [topic]. Only invoked when inputs change (load or filter), so it never
+  /// runs on a rebuild/read. Uses the precomputed [_titlesLower] cache, so a
+  /// filter pass allocates no per-lesson lowercase strings.
+  List<Lesson> _computeFiltered(String query, String? topic) {
+    final normalized = query.trim().toLowerCase();
+    final result = <Lesson>[];
+    for (var i = 0; i < _allLessons.length; i++) {
+      final lesson = _allLessons[i];
+      final matchesQuery =
+          normalized.isEmpty || _titlesLower[i].contains(normalized);
+      final matchesTopic = topic == null || lesson.topic == topic;
+      if (matchesQuery && matchesTopic) result.add(lesson);
+    }
+    return result;
+  }
+
+  /// Applies a new search [query] and resets to the first page of results.
+  void search(String query) =>
+      _emitFiltered(query: query, topic: state.selectedTopic);
+
+  /// Applies a topic filter ([topic] `null` = all) and resets to first page.
+  void selectTopic(String? topic) =>
+      _emitFiltered(query: state.searchQuery, topic: topic);
+
+  void _emitFiltered({required String query, required String? topic}) {
+    _filtered = _computeFiltered(query, topic);
+    final firstPage = _filtered.take(pageSize).toList();
+    emit(
+      state.copyWith(
+        status: LessonStatus.success,
+        searchQuery: query,
+        selectedTopic: topic,
+        lessons: firstPage,
+        hasReachedMax: firstPage.length >= _filtered.length,
+        errorMessage: null,
+      ),
+    );
   }
 }

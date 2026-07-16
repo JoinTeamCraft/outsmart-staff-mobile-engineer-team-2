@@ -32,11 +32,19 @@ class LessonState extends Equatable {
   /// [LessonCubit].
   final String? errorMessage;
 
+  /// Current search query applied to the list (OU-9). Empty means no search.
+  final String searchQuery;
+
+  /// Selected topic filter (OU-9); `null` means all topics.
+  final String? selectedTopic;
+
   const LessonState({
     this.status = LessonStatus.initial,
     this.lessons = const [],
     this.hasReachedMax = false,
     this.errorMessage,
+    this.searchQuery = '',
+    this.selectedTopic,
   });
 
   /// Returns a copy with only the given fields replaced — every other field
@@ -48,6 +56,8 @@ class LessonState extends Equatable {
     List<Lesson>? lessons,
     bool? hasReachedMax,
     Object? errorMessage = _unset,
+    String? searchQuery,
+    Object? selectedTopic = _unset,
   }) {
     return LessonState(
       status: status ?? this.status,
@@ -56,9 +66,20 @@ class LessonState extends Equatable {
       errorMessage: identical(errorMessage, _unset)
           ? this.errorMessage
           : errorMessage as String?,
+      searchQuery: searchQuery ?? this.searchQuery,
+      selectedTopic: identical(selectedTopic, _unset)
+          ? this.selectedTopic
+          : selectedTopic as String?,
     );
   }
 
   @override
-  List<Object?> get props => [status, lessons, hasReachedMax, errorMessage];
+  List<Object?> get props => [
+        status,
+        lessons,
+        hasReachedMax,
+        errorMessage,
+        searchQuery,
+        selectedTopic,
+      ];
 }
