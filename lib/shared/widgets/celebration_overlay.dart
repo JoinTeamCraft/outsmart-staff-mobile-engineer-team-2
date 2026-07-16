@@ -1,11 +1,8 @@
-import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../features/quiz/domain/quiz_result.dart';
 import '../../features/quiz/presentation/cubit/quiz_completion_cubit.dart';
-import '../../features/quiz/presentation/cubit/quiz_cubit.dart';
-import '../../features/quiz/presentation/cubit/quiz_state.dart';
 import 'confetti_painter.dart';
 
 /// App-wide overlay that plays a confetti celebration when a quiz completes
@@ -86,42 +83,8 @@ class _CelebrationOverlayState extends State<CelebrationOverlay>
                 ),
               ),
             ),
-          // Debug-only trigger: there is no quiz screen yet (OU-12), so this
-          // drives a real quiz to completion to demo/record the celebration. It
-          // is stripped from release builds; remove once OU-12 lands.
-          if (kDebugMode)
-            Positioned(
-              right: 16,
-              bottom: 16,
-              child: SafeArea(
-                // No tooltip: this overlay is mounted above the Navigator via
-                // MaterialApp.builder, so there is no Overlay ancestor for a
-                // Tooltip to attach to.
-                child: FloatingActionButton.small(
-                  heroTag: 'debug_celebrate',
-                  onPressed: () => _debugCompleteQuiz(context),
-                  child: const Icon(Icons.celebration),
-                ),
-              ),
-            ),
         ],
       ),
     );
-  }
-
-  /// Drives the real completion path (QuizCubit -> QuizCompletionCubit -> this
-  /// overlay) so the animation can be exercised before OU-12 exists.
-  Future<void> _debugCompleteQuiz(BuildContext context) async {
-    final quizCubit = context.read<QuizCubit>();
-    await quizCubit.loadQuiz('lesson-1');
-    // Answer a bounded number of questions (the quiz's own count) and yield
-    // between each, so this can never spin the UI thread even if answering
-    // ever becomes asynchronous.
-    final questionCount = quizCubit.state.quiz?.questionCount ?? 0;
-    for (var i = 0; i < questionCount; i++) {
-      if (quizCubit.state.status != QuizStatus.inProgress) break;
-      quizCubit.answerQuestion(0);
-      await Future<void>.delayed(Duration.zero);
-    }
   }
 }
